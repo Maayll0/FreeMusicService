@@ -1,7 +1,8 @@
 from typing import Optional
 import datetime
 
-from sqlalchemy import Boolean, CheckConstraint, Column, Date, ForeignKeyConstraint, Identity, Index, Integer, PrimaryKeyConstraint, String, Table, Text, UniqueConstraint, text
+from sqlalchemy import BigInteger, Boolean, CheckConstraint, Column, Date, DateTime, ForeignKeyConstraint, Identity, Index, Integer, PrimaryKeyConstraint, String, Table, Text, UniqueConstraint, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
@@ -20,6 +21,21 @@ t_listener_music_catalog = Table(
     Column('performer_name', String),
     Column('performer_type', Text)
 )
+
+
+class MainLog(Base):
+    __tablename__ = 'main_log'
+    __table_args__ = (
+        PrimaryKeyConstraint('log_id', name='main_log_pkey'),
+    )
+
+    log_id: Mapped[int] = mapped_column(BigInteger, Identity(always=True, start=1, increment=1, minvalue=1, maxvalue=9223372036854775807, cycle=False, cache=1), primary_key=True, autoincrement=True)
+    table_name: Mapped[str] = mapped_column(Text, nullable=False)
+    operation_type: Mapped[str] = mapped_column(Text, nullable=False)
+    operation_time: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False, server_default=text('now()'))
+    user_operator: Mapped[str] = mapped_column(Text, nullable=False, server_default=text('CURRENT_USER'))
+    old_data: Mapped[Optional[object]] = mapped_column(JSONB)
+    new_data: Mapped[Optional[object]] = mapped_column(JSONB)
 
 
 class Users(Base):

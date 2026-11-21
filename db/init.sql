@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict M3N7FgNtaODcQx1GhuLGiBOh7PexY1pnubw7HPwO13C1I9hmWTPMgI3wZf1tBsl
+\restrict upXTMpNtkiFXEok7glb1swWSfNhzhVgSfKyt0nZmf1fEcAgO46ggwdXoqg4hjCo
 
 -- Dumped from database version 17.11 (Debian 17.11-0+deb13u1)
 -- Dumped by pg_dump version 17.11 (Debian 17.11-0+deb13u1)
@@ -24,7 +24,7 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: albums; Type: TABLE; Schema: public; Owner: postgres
+-- Name: albums; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.albums (
@@ -38,10 +38,8 @@ CREATE TABLE public.albums (
 );
 
 
-ALTER TABLE public.albums OWNER TO postgres;
-
 --
--- Name: albums_album_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: albums_album_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 ALTER TABLE public.albums ALTER COLUMN album_id ADD GENERATED ALWAYS AS IDENTITY (
@@ -55,7 +53,7 @@ ALTER TABLE public.albums ALTER COLUMN album_id ADD GENERATED ALWAYS AS IDENTITY
 
 
 --
--- Name: bands; Type: TABLE; Schema: public; Owner: postgres
+-- Name: bands; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.bands (
@@ -68,10 +66,8 @@ CREATE TABLE public.bands (
 );
 
 
-ALTER TABLE public.bands OWNER TO postgres;
-
 --
--- Name: musicians; Type: TABLE; Schema: public; Owner: postgres
+-- Name: musicians; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.musicians (
@@ -85,10 +81,8 @@ CREATE TABLE public.musicians (
 );
 
 
-ALTER TABLE public.musicians OWNER TO postgres;
-
 --
--- Name: songs; Type: TABLE; Schema: public; Owner: postgres
+-- Name: songs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.songs (
@@ -105,10 +99,8 @@ CREATE TABLE public.songs (
 );
 
 
-ALTER TABLE public.songs OWNER TO postgres;
-
 --
--- Name: bands_band_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: bands_band_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 ALTER TABLE public.bands ALTER COLUMN band_id ADD GENERATED ALWAYS AS IDENTITY (
@@ -122,7 +114,7 @@ ALTER TABLE public.bands ALTER COLUMN band_id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- Name: listener_music_catalog; Type: VIEW; Schema: public; Owner: postgres
+-- Name: listener_music_catalog; Type: VIEW; Schema: public; Owner: -
 --
 
 CREATE VIEW public.listener_music_catalog AS
@@ -144,10 +136,37 @@ CREATE VIEW public.listener_music_catalog AS
      LEFT JOIN public.bands b ON ((b.band_id = a.band_id)));
 
 
-ALTER VIEW public.listener_music_catalog OWNER TO postgres;
+--
+-- Name: main_log; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.main_log (
+    log_id bigint NOT NULL,
+    table_name text NOT NULL,
+    operation_type text NOT NULL,
+    operation_time timestamp with time zone DEFAULT now() NOT NULL,
+    user_operator text DEFAULT CURRENT_USER NOT NULL,
+    old_data jsonb,
+    new_data jsonb
+);
+
 
 --
--- Name: musicians_musician_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: main_log_log_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.main_log ALTER COLUMN log_id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.main_log_log_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: musicians_musician_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 ALTER TABLE public.musicians ALTER COLUMN musician_id ADD GENERATED ALWAYS AS IDENTITY (
@@ -161,7 +180,7 @@ ALTER TABLE public.musicians ALTER COLUMN musician_id ADD GENERATED ALWAYS AS ID
 
 
 --
--- Name: songs_song_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: songs_song_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 ALTER TABLE public.songs ALTER COLUMN song_id ADD GENERATED ALWAYS AS IDENTITY (
@@ -175,7 +194,7 @@ ALTER TABLE public.songs ALTER COLUMN song_id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: postgres
+-- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.users (
@@ -188,10 +207,8 @@ CREATE TABLE public.users (
 );
 
 
-ALTER TABLE public.users OWNER TO postgres;
-
 --
--- Name: users_user_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: users_user_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 ALTER TABLE public.users ALTER COLUMN user_id ADD GENERATED ALWAYS AS IDENTITY (
@@ -205,7 +222,7 @@ ALTER TABLE public.users ALTER COLUMN user_id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- Data for Name: albums; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: albums; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.albums (album_id, title, musician_id, band_id, release_date, cover_url) FROM stdin;
@@ -230,7 +247,7 @@ COPY public.albums (album_id, title, musician_id, band_id, release_date, cover_u
 
 
 --
--- Data for Name: bands; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: bands; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.bands (band_id, name, formed_date, country, description, owner_user_id) FROM stdin;
@@ -246,7 +263,94 @@ COPY public.bands (band_id, name, formed_date, country, description, owner_user_
 
 
 --
--- Data for Name: musicians; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: main_log; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.main_log (log_id, table_name, operation_type, operation_time, user_operator, old_data, new_data) FROM stdin;
+1	bands	I	2026-11-07 00:40:37.934066+00	postgres	\N	{"name": "Kanonenfieber", "band_id": 8, "country": "Germany", "description": null, "formed_date": 2020, "owner_user_id": null}
+2	bands	U	2026-11-07 00:44:02.302407+00	postgres	{"name": "Kanonenfieber", "band_id": 8, "country": "Germany", "description": null, "formed_date": 2020, "owner_user_id": null}	{"name": "Kanonenfieber", "band_id": 8, "country": "Germany", "description": "Their lyrics are generally centered on World War I.", "formed_date": 2020, "owner_user_id": null}
+3	bands	I	2026-11-07 00:45:21.58799+00	postgres	\N	{"name": "test", "band_id": 9, "country": "Russia", "description": null, "formed_date": 0, "owner_user_id": null}
+4	bands	D	2026-11-07 00:45:56.129963+00	postgres	{"name": "test", "band_id": 9, "country": "Russia", "description": null, "formed_date": 0, "owner_user_id": null}	\N
+5	musicians	I	2026-11-21 14:38:33.744008+00	postgres	\N	{"country": "Russia", "biography": "Russian singer known for patriotic songs", "last_name": "Dronov", "first_name": "Yaroslav", "stage_name": "SHAMAN", "musician_id": 8, "owner_user_id": null}
+6	albums	I	2026-11-21 14:40:16.909328+00	postgres	\N	{"title": "SHAMAN", "band_id": null, "album_id": 8, "cover_url": null, "musician_id": 8, "release_date": "2024-01-01"}
+7	songs	I	2026-11-21 14:42:29.397111+00	postgres	\N	{"genre": "pop", "title": "Встанем", "access": 0, "song_id": 16, "album_id": 8, "file_path": "", "track_number": 1, "duration_seconds": 240}
+8	songs	I	2026-11-21 14:42:29.397111+00	postgres	\N	{"genre": "pop", "title": "Я русский", "access": 0, "song_id": 17, "album_id": 8, "file_path": "", "track_number": 2, "duration_seconds": 220}
+9	albums	I	2026-11-21 14:57:20.940554+00	postgres	\N	{"title": "The Last Stand", "band_id": 4, "album_id": 9, "cover_url": null, "musician_id": null, "release_date": "2016-08-19"}
+10	albums	I	2026-11-21 14:57:20.946334+00	postgres	\N	{"title": "Toxicity", "band_id": 5, "album_id": 10, "cover_url": null, "musician_id": null, "release_date": "2001-09-04"}
+11	albums	I	2026-11-21 14:57:20.948403+00	postgres	\N	{"title": "Utiliarian", "band_id": 6, "album_id": 11, "cover_url": null, "musician_id": null, "release_date": "2012-02-28"}
+12	albums	I	2026-11-21 14:57:20.950148+00	postgres	\N	{"title": "Siege Ubsessed!", "band_id": 7, "album_id": 12, "cover_url": null, "musician_id": null, "release_date": "2023-02-03"}
+13	albums	I	2026-11-21 14:59:13.55034+00	postgres	\N	{"title": "The Last Stand", "band_id": 4, "album_id": 13, "cover_url": null, "musician_id": null, "release_date": "2016-08-19"}
+14	songs	I	2026-11-21 14:59:13.555261+00	postgres	\N	{"genre": "power metal", "title": "The Last Stand", "access": 0, "song_id": 22, "album_id": 9, "file_path": "", "track_number": 1, "duration_seconds": 250}
+15	songs	I	2026-11-21 14:59:13.555261+00	postgres	\N	{"genre": "power metal", "title": "Sparta", "access": 0, "song_id": 23, "album_id": 9, "file_path": "", "track_number": 2, "duration_seconds": 230}
+16	albums	I	2026-11-21 14:59:13.557237+00	postgres	\N	{"title": "Toxicity", "band_id": 5, "album_id": 14, "cover_url": null, "musician_id": null, "release_date": "2001-09-04"}
+17	songs	I	2026-11-21 14:59:13.558576+00	postgres	\N	{"genre": "nu metal", "title": "Chop Suey!", "access": 0, "song_id": 24, "album_id": 10, "file_path": "", "track_number": 1, "duration_seconds": 210}
+18	songs	I	2026-11-21 14:59:13.558576+00	postgres	\N	{"genre": "nu metal", "title": "Toxicity", "access": 0, "song_id": 25, "album_id": 10, "file_path": "", "track_number": 2, "duration_seconds": 220}
+19	albums	I	2026-11-21 14:59:13.560084+00	postgres	\N	{"title": "Utiliarian", "band_id": 6, "album_id": 15, "cover_url": null, "musician_id": null, "release_date": "2012-02-28"}
+20	songs	I	2026-11-21 14:59:13.561083+00	postgres	\N	{"genre": "grindcore", "title": "The Wolf I Feed", "access": 0, "song_id": 26, "album_id": 11, "file_path": "", "track_number": 5, "duration_seconds": 177}
+21	songs	I	2026-11-21 14:59:13.561083+00	postgres	\N	{"genre": "grindcore", "title": "Fall on Their Swords", "access": 0, "song_id": 27, "album_id": 11, "file_path": "", "track_number": 7, "duration_seconds": 237}
+22	albums	I	2026-11-21 14:59:13.562318+00	postgres	\N	{"title": "Siege Ubsessed!", "band_id": 7, "album_id": 16, "cover_url": null, "musician_id": null, "release_date": "2023-02-03"}
+23	songs	I	2026-11-21 14:59:13.563604+00	postgres	\N	{"genre": "black metal", "title": "Elephantry", "access": 0, "song_id": 28, "album_id": 12, "file_path": "", "track_number": 3, "duration_seconds": 191}
+24	songs	I	2026-11-21 14:59:13.563604+00	postgres	\N	{"genre": "black metal", "title": "Siege Ubsessed", "access": 0, "song_id": 29, "album_id": 12, "file_path": "", "track_number": 2, "duration_seconds": 213}
+25	songs	I	2026-11-21 15:02:33.0702+00	postgres	\N	{"genre": "nu metal", "title": "Boom!", "access": 0, "song_id": 30, "album_id": 10, "file_path": "", "track_number": 3, "duration_seconds": 135}
+26	songs	I	2026-11-21 15:02:33.0702+00	postgres	\N	{"genre": "nu metal", "title": "Soldier Side", "access": 0, "song_id": 31, "album_id": 10, "file_path": "", "track_number": 4, "duration_seconds": 220}
+27	songs	U	2026-11-21 15:05:15.731308+00	postgres	{"genre": "nu metal", "title": "Chop Suey!", "access": 0, "song_id": 24, "album_id": 10, "file_path": "", "track_number": 1, "duration_seconds": 210}	{"genre": "nu metal", "title": "Chop Suey!", "access": 2, "song_id": 24, "album_id": 10, "file_path": "", "track_number": 1, "duration_seconds": 210}
+28	songs	U	2026-11-21 15:05:15.731308+00	postgres	{"genre": "nu metal", "title": "Toxicity", "access": 0, "song_id": 25, "album_id": 10, "file_path": "", "track_number": 2, "duration_seconds": 220}	{"genre": "nu metal", "title": "Toxicity", "access": 2, "song_id": 25, "album_id": 10, "file_path": "", "track_number": 2, "duration_seconds": 220}
+29	songs	U	2026-11-21 15:05:15.731308+00	postgres	{"genre": "nu metal", "title": "Boom!", "access": 0, "song_id": 30, "album_id": 10, "file_path": "", "track_number": 3, "duration_seconds": 135}	{"genre": "nu metal", "title": "Boom!", "access": 2, "song_id": 30, "album_id": 10, "file_path": "", "track_number": 3, "duration_seconds": 135}
+30	songs	U	2026-11-21 15:05:15.731308+00	postgres	{"genre": "nu metal", "title": "Soldier Side", "access": 0, "song_id": 31, "album_id": 10, "file_path": "", "track_number": 4, "duration_seconds": 220}	{"genre": "nu metal", "title": "Soldier Side", "access": 2, "song_id": 31, "album_id": 10, "file_path": "", "track_number": 4, "duration_seconds": 220}
+31	songs	U	2026-11-21 15:06:03.510181+00	postgres	{"genre": "epic power metal", "title": "He Has Returned", "access": 0, "song_id": 8, "album_id": 6, "file_path": "song1.mp3", "track_number": 1, "duration_seconds": 265}	{"genre": "epic power metal", "title": "He Has Returned", "access": 1, "song_id": 8, "album_id": 6, "file_path": "song1.mp3", "track_number": 1, "duration_seconds": 265}
+32	songs	U	2026-11-21 15:06:03.510181+00	postgres	{"genre": "epic power metal", "title": "The Siege of Dunkeld (In Hoots We Trust)", "access": 0, "song_id": 9, "album_id": 3, "file_path": "song2.mp3", "track_number": 2, "duration_seconds": 286}	{"genre": "epic power metal", "title": "The Siege of Dunkeld (In Hoots We Trust)", "access": 1, "song_id": 9, "album_id": 3, "file_path": "song2.mp3", "track_number": 2, "duration_seconds": 286}
+33	songs	U	2026-11-21 15:06:03.510181+00	postgres	{"genre": "epic power metal", "title": "Masters of the Galaxy", "access": 0, "song_id": 10, "album_id": 3, "file_path": "song3.mp3", "track_number": 3, "duration_seconds": 265}	{"genre": "epic power metal", "title": "Masters of the Galaxy", "access": 1, "song_id": 10, "album_id": 3, "file_path": "song3.mp3", "track_number": 3, "duration_seconds": 265}
+34	songs	U	2026-11-21 15:06:03.510181+00	postgres	{"genre": "epic power metal", "title": "The Land of Unicorns", "access": 0, "song_id": 11, "album_id": 3, "file_path": "song4.mp3", "track_number": 4, "duration_seconds": 264}	{"genre": "epic power metal", "title": "The Land of Unicorns", "access": 1, "song_id": 11, "album_id": 3, "file_path": "song4.mp3", "track_number": 4, "duration_seconds": 264}
+35	songs	U	2026-11-21 15:06:03.510181+00	postgres	{"genre": "epic power metal", "title": "Power of the Laser Dragon Fire", "access": 0, "song_id": 12, "album_id": 3, "file_path": "song5.mp3", "track_number": 5, "duration_seconds": 306}	{"genre": "epic power metal", "title": "Power of the Laser Dragon Fire", "access": 1, "song_id": 12, "album_id": 3, "file_path": "song5.mp3", "track_number": 5, "duration_seconds": 306}
+36	songs	U	2026-11-21 15:06:03.510181+00	postgres	{"genre": "epic power metal", "title": "Gloryhammer", "access": 0, "song_id": 13, "album_id": 3, "file_path": "song6.mp3", "track_number": 7, "duration_seconds": 300}	{"genre": "epic power metal", "title": "Gloryhammer", "access": 1, "song_id": 13, "album_id": 3, "file_path": "song6.mp3", "track_number": 7, "duration_seconds": 300}
+37	songs	U	2026-11-21 15:06:03.510181+00	postgres	{"genre": "epic power metal", "title": "Hootsforce", "access": 0, "song_id": 14, "album_id": 3, "file_path": "song7.mp3", "track_number": 8, "duration_seconds": 230}	{"genre": "epic power metal", "title": "Hootsforce", "access": 1, "song_id": 14, "album_id": 3, "file_path": "song7.mp3", "track_number": 8, "duration_seconds": 230}
+38	users	D	2026-11-21 15:10:08.962103+00	postgres	{"email": "l04@example.test", "access": 0, "user_id": 4, "username": "listener4", "is_musician": false, "password_hash": "hash_l04"}	\N
+39	playlists	D	2026-11-21 15:10:08.962103+00	postgres	{"title": "Избранное", "user_id": 4, "description": "", "playlist_id": 4}	\N
+40	playlists	D	2026-11-21 15:10:08.962103+00	postgres	{"title": "Для наблюдения за муравьями", "user_id": 4, "description": "", "playlist_id": 6}	\N
+41	playlists	D	2026-11-21 15:10:08.962103+00	postgres	{"title": "Избранное", "user_id": 4, "description": "", "playlist_id": 11}	\N
+42	playlists	D	2026-11-21 15:10:08.962103+00	postgres	{"title": "Для наблюдения за муравьями", "user_id": 4, "description": "", "playlist_id": 13}	\N
+43	listening_stats	D	2026-11-21 15:10:08.962103+00	postgres	{"song_id": 9, "user_id": 4, "is_liked": true, "play_count": 6, "last_listened_at": "2026-10-07T22:10:00"}	\N
+44	listening_stats	D	2026-11-21 15:10:08.962103+00	postgres	{"song_id": 8, "user_id": 4, "is_liked": true, "play_count": 42, "last_listened_at": "2026-10-03T12:34:56"}	\N
+45	users	U	2026-11-21 15:11:32.674885+00	postgres	{"email": "l02@example.test", "access": 0, "user_id": 2, "username": "listener2", "is_musician": false, "password_hash": "hash_l02"}	{"email": "l02@example.test", "access": 1, "user_id": 2, "username": "listener2", "is_musician": false, "password_hash": "hash_l02"}
+46	users	U	2026-11-21 15:11:42.074568+00	postgres	{"email": "l03@example.test", "access": 0, "user_id": 3, "username": "listener3", "is_musician": false, "password_hash": "hash_l03"}	{"email": "l03@example.test", "access": 2, "user_id": 3, "username": "listener3", "is_musician": false, "password_hash": "hash_l03"}
+47	musicians	U	2026-11-21 15:21:36.047052+00	postgres	{"country": "Russia", "biography": "Russian singer known for patriotic songs", "last_name": "Dronov", "first_name": "Yaroslav", "stage_name": "SHAMAN", "musician_id": 8, "owner_user_id": null}	{"country": "Russia", "biography": "Russian singer known for an absence of talent", "last_name": "Dronov", "first_name": "Yaroslav", "stage_name": "SHAMAN", "musician_id": 8, "owner_user_id": null}
+48	bands	U	2026-11-21 15:22:32.220101+00	postgres	{"name": "Gloryhammer", "band_id": 1, "country": "United Kingdom", "description": "", "formed_date": 2010, "owner_user_id": 5}	{"name": "Gloryhammer", "band_id": 1, "country": "United Kingdom", "description": "", "formed_date": 2010, "owner_user_id": 5}
+49	bands	U	2026-11-21 15:22:32.220101+00	postgres	{"name": "Alestorm", "band_id": 2, "country": "Scotland", "description": "", "formed_date": 2004, "owner_user_id": 7}	{"name": "Alestorm", "band_id": 2, "country": "Scotland", "description": "", "formed_date": 2004, "owner_user_id": 7}
+50	bands	U	2026-11-21 15:22:32.220101+00	postgres	{"name": "Angus McSix", "band_id": 3, "country": "Switzerland", "description": "", "formed_date": 2022, "owner_user_id": 6}	{"name": "Angus McSix", "band_id": 3, "country": "Switzerland", "description": "", "formed_date": 2022, "owner_user_id": 6}
+51	bands	U	2026-11-21 15:22:32.220101+00	postgres	{"name": "Sabaton", "band_id": 4, "country": "Sweden", "description": "", "formed_date": 1999, "owner_user_id": null}	{"name": "Sabaton", "band_id": 4, "country": "Sweden", "description": "", "formed_date": 1999, "owner_user_id": null}
+52	bands	U	2026-11-21 15:22:32.220101+00	postgres	{"name": "System of a Down", "band_id": 5, "country": "U.S.", "description": "", "formed_date": 1994, "owner_user_id": null}	{"name": "System of a Down", "band_id": 5, "country": "U.S.", "description": "", "formed_date": 1994, "owner_user_id": null}
+53	bands	U	2026-11-21 15:22:32.220101+00	postgres	{"name": "Napalm Death", "band_id": 6, "country": "England", "description": "", "formed_date": 1981, "owner_user_id": null}	{"name": "Napalm Death", "band_id": 6, "country": "England", "description": "", "formed_date": 1981, "owner_user_id": null}
+54	bands	U	2026-11-21 15:22:32.220101+00	postgres	{"name": "Curta’n Wall", "band_id": 7, "country": "U.S.", "description": "", "formed_date": 2020, "owner_user_id": null}	{"name": "Curta’n Wall", "band_id": 7, "country": "U.S.", "description": "", "formed_date": 2020, "owner_user_id": null}
+55	bands	U	2026-11-21 15:22:32.220101+00	postgres	{"name": "Kanonenfieber", "band_id": 8, "country": "Germany", "description": "Their lyrics are generally centered on World War I.", "formed_date": 2020, "owner_user_id": null}	{"name": "Kanonenfieber", "band_id": 8, "country": "Germany", "description": "", "formed_date": 2020, "owner_user_id": null}
+56	albums	I	2026-11-21 15:28:15.541477+00	postgres	\N	{"title": "Die Urkatastrophe", "band_id": 8, "album_id": 17, "cover_url": null, "musician_id": null, "release_date": "2024-09-20"}
+57	songs	I	2026-11-21 15:29:42.193482+00	postgres	\N	{"genre": "blackened death metal", "title": "Menschenmühle", "access": 0, "song_id": 32, "album_id": 17, "file_path": "", "track_number": 2, "duration_seconds": 219}
+58	songs	I	2026-11-21 15:29:42.193482+00	postgres	\N	{"genre": "blackened death metal", "title": "Sturmtrupp", "access": 0, "song_id": 33, "album_id": 17, "file_path": "", "track_number": 3, "duration_seconds": 272}
+59	songs	I	2026-11-21 15:29:42.193482+00	postgres	\N	{"genre": "blackened death metal", "title": "Panzerhenker", "access": 0, "song_id": 34, "album_id": 17, "file_path": "", "track_number": 8, "duration_seconds": 309}
+60	users	U	2026-11-21 15:46:52.832671+00	postgres	{"email": "l01@example.test", "access": 0, "user_id": 1, "username": "listener1", "is_musician": false, "password_hash": "hash_l01"}	{"email": "l01@example.test", "access": 0, "user_id": 1, "username": "listener1", "is_musician": false, "password_hash": "$argon2id$v=19$m=65536,t=3,p=2$HQ6jTbioBVqu6gOcqFmRlg$8D2m1W+TsZEvn7NC+B4JOsmwrfKdo+84hEsXl8z8Ofg"}
+61	users	U	2026-11-21 15:46:52.841077+00	postgres	{"email": "l02@example.test", "access": 1, "user_id": 2, "username": "listener2", "is_musician": false, "password_hash": "hash_l02"}	{"email": "l02@example.test", "access": 1, "user_id": 2, "username": "listener2", "is_musician": false, "password_hash": "$argon2id$v=19$m=65536,t=3,p=2$2zEWRUlb474Edr0MGx9/bw$WKgQ1CgziimfrTCSSR2+Ipy/hN1XYc+A2NvfVJMEPrk"}
+62	users	U	2026-11-21 15:46:52.842611+00	postgres	{"email": "l03@example.test", "access": 2, "user_id": 3, "username": "listener3", "is_musician": false, "password_hash": "hash_l03"}	{"email": "l03@example.test", "access": 2, "user_id": 3, "username": "listener3", "is_musician": false, "password_hash": "$argon2id$v=19$m=65536,t=3,p=2$pNwk+HEElvTssH+NznGOJg$nhorf/Rmp8S2BuH+NSNcu4N3ftothTYBW6IGF9+sBlo"}
+63	songs	U	2026-11-21 16:07:42.938699+00	postgres	{"genre": "pop", "title": "Встанем", "access": 0, "song_id": 16, "album_id": 8, "file_path": "", "track_number": 1, "duration_seconds": 240}	{"genre": "pop", "title": "Встанем", "access": 0, "song_id": 16, "album_id": 8, "file_path": "song8", "track_number": 1, "duration_seconds": 240}
+64	songs	U	2026-11-21 16:07:42.938699+00	postgres	{"genre": "pop", "title": "Я русский", "access": 0, "song_id": 17, "album_id": 8, "file_path": "", "track_number": 2, "duration_seconds": 220}	{"genre": "pop", "title": "Я русский", "access": 0, "song_id": 17, "album_id": 8, "file_path": "song8", "track_number": 2, "duration_seconds": 220}
+65	songs	U	2026-11-21 16:08:31.879988+00	postgres	{"genre": "pop", "title": "Встанем", "access": 0, "song_id": 16, "album_id": 8, "file_path": "song8", "track_number": 1, "duration_seconds": 240}	{"genre": "pop", "title": "Встанем", "access": 0, "song_id": 16, "album_id": 8, "file_path": "song8.mp3", "track_number": 1, "duration_seconds": 240}
+66	songs	U	2026-11-21 16:08:31.879988+00	postgres	{"genre": "pop", "title": "Я русский", "access": 0, "song_id": 17, "album_id": 8, "file_path": "song8", "track_number": 2, "duration_seconds": 220}	{"genre": "pop", "title": "Я русский", "access": 0, "song_id": 17, "album_id": 8, "file_path": "song8.mp3", "track_number": 2, "duration_seconds": 220}
+67	songs	U	2026-11-21 16:09:04.609642+00	postgres	{"genre": "power metal", "title": "The Last Stand", "access": 0, "song_id": 22, "album_id": 9, "file_path": "", "track_number": 1, "duration_seconds": 250}	{"genre": "power metal", "title": "The Last Stand", "access": 0, "song_id": 22, "album_id": 9, "file_path": "song7.mp3", "track_number": 1, "duration_seconds": 250}
+68	songs	U	2026-11-21 16:09:04.609642+00	postgres	{"genre": "power metal", "title": "Sparta", "access": 0, "song_id": 23, "album_id": 9, "file_path": "", "track_number": 2, "duration_seconds": 230}	{"genre": "power metal", "title": "Sparta", "access": 0, "song_id": 23, "album_id": 9, "file_path": "song7.mp3", "track_number": 2, "duration_seconds": 230}
+69	songs	U	2026-11-21 16:09:04.609642+00	postgres	{"genre": "grindcore", "title": "The Wolf I Feed", "access": 0, "song_id": 26, "album_id": 11, "file_path": "", "track_number": 5, "duration_seconds": 177}	{"genre": "grindcore", "title": "The Wolf I Feed", "access": 0, "song_id": 26, "album_id": 11, "file_path": "song7.mp3", "track_number": 5, "duration_seconds": 177}
+70	songs	U	2026-11-21 16:09:04.609642+00	postgres	{"genre": "grindcore", "title": "Fall on Their Swords", "access": 0, "song_id": 27, "album_id": 11, "file_path": "", "track_number": 7, "duration_seconds": 237}	{"genre": "grindcore", "title": "Fall on Their Swords", "access": 0, "song_id": 27, "album_id": 11, "file_path": "song7.mp3", "track_number": 7, "duration_seconds": 237}
+71	songs	U	2026-11-21 16:09:04.609642+00	postgres	{"genre": "black metal", "title": "Elephantry", "access": 0, "song_id": 28, "album_id": 12, "file_path": "", "track_number": 3, "duration_seconds": 191}	{"genre": "black metal", "title": "Elephantry", "access": 0, "song_id": 28, "album_id": 12, "file_path": "song7.mp3", "track_number": 3, "duration_seconds": 191}
+72	songs	U	2026-11-21 16:09:04.609642+00	postgres	{"genre": "black metal", "title": "Siege Ubsessed", "access": 0, "song_id": 29, "album_id": 12, "file_path": "", "track_number": 2, "duration_seconds": 213}	{"genre": "black metal", "title": "Siege Ubsessed", "access": 0, "song_id": 29, "album_id": 12, "file_path": "song7.mp3", "track_number": 2, "duration_seconds": 213}
+73	songs	U	2026-11-21 16:09:04.609642+00	postgres	{"genre": "nu metal", "title": "Chop Suey!", "access": 2, "song_id": 24, "album_id": 10, "file_path": "", "track_number": 1, "duration_seconds": 210}	{"genre": "nu metal", "title": "Chop Suey!", "access": 2, "song_id": 24, "album_id": 10, "file_path": "song7.mp3", "track_number": 1, "duration_seconds": 210}
+74	songs	U	2026-11-21 16:09:04.609642+00	postgres	{"genre": "nu metal", "title": "Toxicity", "access": 2, "song_id": 25, "album_id": 10, "file_path": "", "track_number": 2, "duration_seconds": 220}	{"genre": "nu metal", "title": "Toxicity", "access": 2, "song_id": 25, "album_id": 10, "file_path": "song7.mp3", "track_number": 2, "duration_seconds": 220}
+75	songs	U	2026-11-21 16:09:04.609642+00	postgres	{"genre": "nu metal", "title": "Boom!", "access": 2, "song_id": 30, "album_id": 10, "file_path": "", "track_number": 3, "duration_seconds": 135}	{"genre": "nu metal", "title": "Boom!", "access": 2, "song_id": 30, "album_id": 10, "file_path": "song7.mp3", "track_number": 3, "duration_seconds": 135}
+76	songs	U	2026-11-21 16:09:04.609642+00	postgres	{"genre": "nu metal", "title": "Soldier Side", "access": 2, "song_id": 31, "album_id": 10, "file_path": "", "track_number": 4, "duration_seconds": 220}	{"genre": "nu metal", "title": "Soldier Side", "access": 2, "song_id": 31, "album_id": 10, "file_path": "song7.mp3", "track_number": 4, "duration_seconds": 220}
+77	songs	U	2026-11-21 16:09:04.609642+00	postgres	{"genre": "blackened death metal", "title": "Menschenmühle", "access": 0, "song_id": 32, "album_id": 17, "file_path": "", "track_number": 2, "duration_seconds": 219}	{"genre": "blackened death metal", "title": "Menschenmühle", "access": 0, "song_id": 32, "album_id": 17, "file_path": "song7.mp3", "track_number": 2, "duration_seconds": 219}
+78	songs	U	2026-11-21 16:09:04.609642+00	postgres	{"genre": "blackened death metal", "title": "Sturmtrupp", "access": 0, "song_id": 33, "album_id": 17, "file_path": "", "track_number": 3, "duration_seconds": 272}	{"genre": "blackened death metal", "title": "Sturmtrupp", "access": 0, "song_id": 33, "album_id": 17, "file_path": "song7.mp3", "track_number": 3, "duration_seconds": 272}
+79	songs	U	2026-11-21 16:09:04.609642+00	postgres	{"genre": "blackened death metal", "title": "Panzerhenker", "access": 0, "song_id": 34, "album_id": 17, "file_path": "", "track_number": 8, "duration_seconds": 309}	{"genre": "blackened death metal", "title": "Panzerhenker", "access": 0, "song_id": 34, "album_id": 17, "file_path": "song7.mp3", "track_number": 8, "duration_seconds": 309}
+\.
+
+
+--
+-- Data for Name: musicians; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.musicians (musician_id, first_name, last_name, stage_name, country, biography, owner_user_id) FROM stdin;
@@ -262,7 +366,7 @@ COPY public.musicians (musician_id, first_name, last_name, stage_name, country, 
 
 
 --
--- Data for Name: songs; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: songs; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.songs (song_id, album_id, title, track_number, duration_seconds, genre, file_path, access) FROM stdin;
@@ -292,7 +396,7 @@ COPY public.songs (song_id, album_id, title, track_number, duration_seconds, gen
 
 
 --
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.users (user_id, username, email, password_hash, is_musician, access) FROM stdin;
@@ -306,42 +410,49 @@ COPY public.users (user_id, username, email, password_hash, is_musician, access)
 
 
 --
--- Name: albums_album_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: albums_album_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.albums_album_id_seq', 17, true);
 
 
 --
--- Name: bands_band_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: bands_band_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.bands_band_id_seq', 9, true);
 
 
 --
--- Name: musicians_musician_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: main_log_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.main_log_log_id_seq', 79, true);
+
+
+--
+-- Name: musicians_musician_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.musicians_musician_id_seq', 8, true);
 
 
 --
--- Name: songs_song_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: songs_song_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.songs_song_id_seq', 34, true);
 
 
 --
--- Name: users_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: users_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.users_user_id_seq', 8, true);
 
 
 --
--- Name: albums albums_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: albums albums_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.albums
@@ -349,7 +460,7 @@ ALTER TABLE ONLY public.albums
 
 
 --
--- Name: bands bands_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: bands bands_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.bands
@@ -357,7 +468,15 @@ ALTER TABLE ONLY public.bands
 
 
 --
--- Name: musicians musicians_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: main_log main_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.main_log
+    ADD CONSTRAINT main_log_pkey PRIMARY KEY (log_id);
+
+
+--
+-- Name: musicians musicians_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.musicians
@@ -365,7 +484,7 @@ ALTER TABLE ONLY public.musicians
 
 
 --
--- Name: songs songs_album_id_track_number_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: songs songs_album_id_track_number_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.songs
@@ -373,7 +492,7 @@ ALTER TABLE ONLY public.songs
 
 
 --
--- Name: songs songs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: songs songs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.songs
@@ -381,7 +500,7 @@ ALTER TABLE ONLY public.songs
 
 
 --
--- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
@@ -389,7 +508,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
@@ -397,7 +516,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
@@ -405,91 +524,91 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: idx_albums_band; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_albums_band; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_albums_band ON public.albums USING btree (band_id);
 
 
 --
--- Name: idx_albums_musician; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_albums_musician; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_albums_musician ON public.albums USING btree (musician_id);
 
 
 --
--- Name: idx_bands_owner; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_bands_owner; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_bands_owner ON public.bands USING btree (owner_user_id);
 
 
 --
--- Name: idx_musicians_owner; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_musicians_owner; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_musicians_owner ON public.musicians USING btree (owner_user_id);
 
 
 --
--- Name: idx_songs_album; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_songs_album; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_songs_album ON public.songs USING btree (album_id);
 
 
 --
--- Name: idx_songs_genre; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_songs_genre; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_songs_genre ON public.songs USING btree (genre);
 
 
 --
--- Name: idx_songs_title; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_songs_title; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_songs_title ON public.songs USING btree (title);
 
 
 --
--- Name: albums trg_log_albums; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: albums trg_log_albums; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_log_albums AFTER INSERT OR DELETE OR UPDATE ON public.albums FOR EACH ROW EXECUTE FUNCTION public.log_table_changes();
 
 
 --
--- Name: bands trg_log_bands; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: bands trg_log_bands; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_log_bands AFTER INSERT OR DELETE OR UPDATE ON public.bands FOR EACH ROW EXECUTE FUNCTION public.log_table_changes();
 
 
 --
--- Name: musicians trg_log_musicians; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: musicians trg_log_musicians; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_log_musicians AFTER INSERT OR DELETE OR UPDATE ON public.musicians FOR EACH ROW EXECUTE FUNCTION public.log_table_changes();
 
 
 --
--- Name: songs trg_log_songs; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: songs trg_log_songs; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_log_songs AFTER INSERT OR DELETE OR UPDATE ON public.songs FOR EACH ROW EXECUTE FUNCTION public.log_table_changes();
 
 
 --
--- Name: users trg_log_users; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: users trg_log_users; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_log_users AFTER INSERT OR DELETE OR UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.log_table_changes();
 
 
 --
--- Name: albums albums_band_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: albums albums_band_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.albums
@@ -497,7 +616,7 @@ ALTER TABLE ONLY public.albums
 
 
 --
--- Name: albums albums_musician_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: albums albums_musician_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.albums
@@ -505,7 +624,7 @@ ALTER TABLE ONLY public.albums
 
 
 --
--- Name: bands bands_owner_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: bands bands_owner_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.bands
@@ -513,7 +632,7 @@ ALTER TABLE ONLY public.bands
 
 
 --
--- Name: musicians musicians_owner_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: musicians musicians_owner_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.musicians
@@ -521,7 +640,7 @@ ALTER TABLE ONLY public.musicians
 
 
 --
--- Name: songs songs_album_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: songs songs_album_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.songs
@@ -532,5 +651,5 @@ ALTER TABLE ONLY public.songs
 -- PostgreSQL database dump complete
 --
 
-\unrestrict M3N7FgNtaODcQx1GhuLGiBOh7PexY1pnubw7HPwO13C1I9hmWTPMgI3wZf1tBsl
+\unrestrict upXTMpNtkiFXEok7glb1swWSfNhzhVgSfKyt0nZmf1fEcAgO46ggwdXoqg4hjCo
 
