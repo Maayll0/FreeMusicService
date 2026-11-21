@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:17.11
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-musicdb}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-musicdb_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-musicdb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-musicdb}:${POSTGRES_PASSWORD:-musicdb_pass}@db:5432/${POSTGRES_DB:-musicdb}
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
