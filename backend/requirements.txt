@@ -10,3 +10,5 @@ pydantic[email]
 
 pytest
 httpx
+PyJWT
+argon2-cffi

@@ -2,8 +2,10 @@ import json
 import logging
 import os
 from pathlib import Path
+import time
+import jwt
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
+from fastapi import Cookie, Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
@@ -13,10 +15,19 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import Users, t_listener_music_catalog
 from schemas import LoginRequest, RegisterRequest, DeleteAccountRequest
+from security import hash_password, verify_password
 
 app = FastAPI(title="MusicService API", version="1.0.0")
 
+COOKIE = "musicaccess_session"
+SECURE_COOKIE = os.getenv("APP_ENV", "development") == "production"
+SESSION_SECONDS = 60 * 60 * 72     # 3 days
 MEDIA_DIR = Path(os.getenv("MEDIA_DIR", "backend/media")).resolve()
+SECRET = os.getenv("JWT_SECRET")
+if not SECRET:
+    raise RuntimeError("JWT_SECRET не задан")
+ALGO = "HS256"
+DEFAULT_HASH = 'Password_123'
 
 logger = logging.getLogger("MusicService")
 logger.setLevel(logging.INFO)
@@ -28,6 +39,30 @@ if not logger.handlers:
 
 def log(event: str, level=logging.INFO, **fields):
     logger.log(level, json.dumps({"level": logging.getLevelName(level), "event": event, **fields}))
+
+
+def create_token(user_id: int) -> str:
+    now = int(time.time())
+    payload = {"sub": str(user_id), "iat": now, "exp": now + SESSION_SECONDS}
+    return jwt.encode(payload, SECRET, algorithm=ALGO)
+
+
+def current_user(
+    token: str | None = Cookie(default=None, alias=COOKIE),
+    db: Session = Depends(get_db),
+):
+    if not token:
+        raise HTTPException(401, "Войдите в аккаунт")
+    try:
+        payload = jwt.decode(token, SECRET, algorithms=[ALGO])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(401, "Сессия истекла")
+    except jwt.InvalidTokenError:
+        raise HTTPException(401, "Сессия недействительна")
+    user = db.get(Users, int(payload["sub"]))
+    if user is None:
+        raise HTTPException(401, "Войдите в аккаунт")
+    return user
 
 
 @app.middleware("http")
@@ -57,7 +92,7 @@ def user_data(user: Users):
 
 @app.post("/api/register", status_code=201)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
-    user = Users(username=payload.login.lower(), password_hash=payload.password,   # TODO: make hash
+    user = Users(username=payload.login.lower(), password_hash=hash_password(payload.password),
                 email=payload.email)
     db.add(user)
     try:
@@ -73,22 +108,40 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
 @app.post("/api/login")
 def login(payload: LoginRequest, response: Response, db: Session = Depends(get_db)):
     user = db.scalar(select(Users).where(Users.username == payload.login.lower()))
-    valid = 1  # check if correct
+    valid = verify_password(payload.password, user.password_hash if user else DEFAULT_HASH)
     if not valid or user is None:
         log("login_failed", status=401)
         raise HTTPException(401, "Неверный логин или пароль")
+    response.set_cookie(
+        COOKIE, create_token(user.user_id), max_age=SESSION_SECONDS,
+        httponly=True, secure=SECURE_COOKIE, samesite="lax", path="/",
+    )
     log("login_success", user_id=user.user_id)
     return {"user": user_data(user)}
 
 
 @app.get("/api/me")
-def me():
-    return 
+def me(user: Users = Depends(current_user)):
+    return {"user": user_data(user)}
 
 
 @app.post("/api/logout", status_code=204)
 def logout(response: Response):
+    response.delete_cookie(COOKIE, path="/", httponly=True,
+                           secure=SECURE_COOKIE, samesite="lax")
     log("logout_success")
+
+
+@app.delete("/api/me", status_code=204)
+def delete_account(payload: DeleteAccountRequest, response: Response,
+                   user: Users = Depends(current_user), db: Session = Depends(get_db)):
+    if not verify_password(payload.password, user.password_hash):
+        raise HTTPException(400, "Неверный пароль")
+    db.delete(user)
+    db.commit()
+    response.delete_cookie(COOKIE, path="/", httponly=True,
+                           secure=SECURE_COOKIE, samesite="lax")
+    log("account_deleted", user_id=user.user_id)
 
 
 def catalog_item(row):
