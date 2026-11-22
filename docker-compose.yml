@@ -18,6 +18,7 @@ services:
       - media_data:/app/media
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-musicdb}:${POSTGRES_PASSWORD:-musicdb_pass}@db:5432/${POSTGRES_DB:-musicdb}
+      JWT_SECRET: ${JWT_SECRET}
     depends_on:
       - db
 

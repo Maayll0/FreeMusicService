@@ -1,17 +1,10 @@
 import uuid
-from sqlalchemy import select
-from models import Users
 
+from models import Users
+from conftest import cleanup_user
 
 def unique_username(prefix="test"):
     return f"{prefix}_{uuid.uuid4().hex[:8]}"
-
-
-def cleanup_user(db_session, username):
-    user = db_session.scalar(select(Users).where(Users.username == username.lower()))
-    if user:
-        db_session.delete(user)
-        db_session.commit()
 
 
 def test_register_success(client, db_session):
@@ -107,3 +100,45 @@ def test_tracks_search_by_artist(client):
     r = client.get("/api/tracks/search", params={"artist": "a"})
     assert r.status_code == 200
     assert isinstance(r.json(), list)
+
+
+def test_stream_unauthorized(client):
+    r = client.get("/api/tracks/1/stream")
+    assert r.status_code == 401
+
+
+def test_stream_track_not_found(client_access):
+    r = client_access.get("/api/tracks/999999/stream")
+    assert r.status_code == 404
+
+
+def test_stream_success(client_access, make_song):
+    c = b"\xff\xfb\x90\x00some-mp3-data"
+    song = make_song(access=1, content=c)
+    r = client_access.get(f"/api/tracks/{song.song_id}/stream")
+    assert r.status_code == 200
+    assert r.content == c
+
+
+def test_stream_access_denied(client_access, db_session, make_song):
+    song = make_song(access=2)
+    r = client_access.get(f"/api/tracks/{song.song_id}/stream")
+    assert r.status_code == 403
+
+
+def test_path_traversal(client_access, db_session, media_dir, make_song):
+    secret = media_dir.parent / "secret.txt"
+    secret.write_text("top secret")
+    song = make_song(access=1)
+    song.file_path = "../secret.txt"
+    db_session.commit()
+    r = client_access.get(f"/api/tracks/{song.song_id}/stream")
+    assert r.status_code == 404
+    secret.unlink()
+
+
+def test_stream_track_metadata(client, make_song):
+    song = make_song(access=2)
+    r = client.get(f"/api/tracks/{song.song_id}")
+    assert r.status_code == 200
+    assert r.json()["title"] == song.title
