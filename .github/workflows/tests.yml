@@ -1,0 +1,14 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tests
+        run: |
+          docker compose up -d db
+          docker compose run --rm backend sh -c "alembic upgrade head && pytest"
