@@ -7,13 +7,13 @@ import jwt
 
 from fastapi import Cookie, Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Users, t_listener_music_catalog
+from models import Users, Songs, t_listener_music_catalog
 from schemas import LoginRequest, RegisterRequest, DeleteAccountRequest
 from security import hash_password, verify_password
 
@@ -174,3 +174,31 @@ def tracks(title: str = Query(default="", max_length=100),
 
     rows = db.execute(query.order_by(q.c.song_title).limit(100)).all()
     return [catalog_item(row) for row in rows]
+
+
+@app.get("/api/tracks/{track_id}")
+def track_detail(track_id: int, db: Session = Depends(get_db)):
+    query = select(t_listener_music_catalog).where(
+        t_listener_music_catalog.c.song_id == track_id
+    )
+    try:
+        track = db.execute(query).one()
+    except NoResultFound:
+        raise HTTPException(404, "Трек не найден")
+    return catalog_item(track)
+
+
+@app.get("/api/tracks/{track_id}/stream")
+def stream(track_id: int, user: Users = Depends(current_user), db: Session = Depends(get_db)):
+    track = db.get(Songs, track_id)
+    if track is None:
+        raise HTTPException(404, "Трек не найден")
+    if user.access < track.access:
+        log("mac_denied", user_id=user.user_id, track_id=track.song_id, status=403)
+        raise HTTPException(403, "Недостаточный уровень допуска")
+
+    path = (MEDIA_DIR / track.file_path).resolve()
+    if not path.is_relative_to(MEDIA_DIR) or not path.is_file():
+        raise HTTPException(404, "Аудиофайл не найден")
+    log("mac_allowed", user_id=user.user_id, track_id=track.song_id)
+    return FileResponse(path, media_type="audio/mpeg")
