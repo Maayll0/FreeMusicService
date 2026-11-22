@@ -27,7 +27,7 @@ SECRET = os.getenv("JWT_SECRET")
 if not SECRET:
     raise RuntimeError("JWT_SECRET не задан")
 ALGO = "HS256"
-DEFAULT_HASH = 'Password_123'
+DEFAULT_PASS = 'Password_123'
 
 logger = logging.getLogger("MusicService")
 logger.setLevel(logging.INFO)
@@ -108,7 +108,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
 @app.post("/api/login")
 def login(payload: LoginRequest, response: Response, db: Session = Depends(get_db)):
     user = db.scalar(select(Users).where(Users.username == payload.login.lower()))
-    valid = verify_password(payload.password, user.password_hash if user else DEFAULT_HASH)
+    valid = verify_password(payload.password, user.password_hash if user else DEFAULT_PASS)
     if not valid or user is None:
         log("login_failed", status=401)
         raise HTTPException(401, "Неверный логин или пароль")
