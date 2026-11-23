@@ -12,7 +12,7 @@ from sqlalchemy import select
 
 from database import DATABASE_URL, get_db
 import main
-from models import Base, Users, Albums, Songs, t_listener_music_catalog
+from models import Base, Users, Albums, Musicians, Songs, t_listener_music_catalog
 
 
 def cleanup_user(db_session, username):
@@ -21,9 +21,11 @@ def cleanup_user(db_session, username):
         db_session.delete(user)
         db_session.commit()
 
+
 @pytest.fixture(scope="session")
 def engine():
     return create_engine(DATABASE_URL)
+
 
 @pytest.fixture
 def db_session(engine):
@@ -34,6 +36,7 @@ def db_session(engine):
     finally:
         session.close()
 
+
 @pytest.fixture
 def client(db_session):
     def override_get_db():
@@ -43,11 +46,13 @@ def client(db_session):
         yield c
     main.app.dependency_overrides.clear()
 
+
 @pytest.fixture
 def media_dir(tmp_path, monkeypatch):
     """Подменяет MEDIA_DIR на временную папку на время теста."""
     monkeypatch.setattr(main, "MEDIA_DIR", tmp_path)
     return tmp_path
+
 
 @pytest.fixture
 def client_access(client, db_session):
@@ -63,15 +68,23 @@ def client_access(client, db_session):
     yield client
     cleanup_user(db_session, username)
 
+
 @pytest.fixture
 def make_album(db_session):
     def _make(title="Test album"):
-        from models import Albums  # подставь реальное имя модели альбома
-        album = Albums(title=title, musician_id=1)  # имена полей подгони под модель
+        musician = Musicians(
+            first_name="aboba_name",
+            last_name="aboba_surname"
+        )
+        db_session.add(musician)
+        db_session.commit()
+        
+        album = Albums(title=title, musician_id=musician.musician_id)
         db_session.add(album)
         db_session.commit()
-        return album
+        return album.album_id
     return _make
+
 
 @pytest.fixture
 def make_song(db_session, media_dir, make_album):
@@ -79,17 +92,17 @@ def make_song(db_session, media_dir, make_album):
 
     def _make(access=1, file_path=None, content=b"some-mp3-bytes"):
         n = next(counter)
-        fp = file_path or f"songs/test_{n}.mp3"
-        (media_dir / fp).parent.mkdir(parents=True, exist_ok=True)
+        fp = file_path or f"test_{n}.mp3"
+        # (media_dir / fp).parent.mkdir(parents=True, exist_ok=True)
         (media_dir / fp).write_bytes(content)
         song = Songs(
-            album_id=make_album().album_id,  # ← обязательный FK
+            album_id=make_album(),
             title=f"Test track {n}",
-            track_number=1,                  # ← NOT NULL
-            duration_seconds=67,            # ← NOT NULL
+            track_number=1,
+            duration_seconds=67,
             file_path=fp,
             access=access,
-            genre="test",                    # ← NOT NULL
+            genre="test",
         )
         db_session.add(song)
         db_session.commit()

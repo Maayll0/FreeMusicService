@@ -142,3 +142,11 @@ def test_stream_track_metadata(client, make_song):
     r = client.get(f"/api/tracks/{song.song_id}")
     assert r.status_code == 200
     assert r.json()["title"] == song.title
+
+
+def test_no_such_file(client_access, db_session, media_dir, make_song):
+    song = make_song(access=1)
+    song.file_path = "not_file.mp3"
+    db_session.commit()
+    r = client_access.get(f"/api/tracks/{song.song_id}/stream")
+    assert r.status_code == 404
