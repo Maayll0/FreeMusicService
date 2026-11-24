@@ -126,15 +126,14 @@ def test_stream_access_denied(client_access, db_session, make_song):
     assert r.status_code == 403
 
 
-def test_path_traversal(client_access, db_session, media_dir, make_song):
-    secret = media_dir.parent / "secret.txt"
+def test_path_traversal(client_access, db_session, tmp_path, make_song):
+    secret = tmp_path / "secret.txt"
     secret.write_text("top secret")
     song = make_song(access=1)
     song.file_path = "../secret.txt"
     db_session.commit()
     r = client_access.get(f"/api/tracks/{song.song_id}/stream")
     assert r.status_code == 404
-    secret.unlink()
 
 
 def test_stream_track_metadata(client, make_song):

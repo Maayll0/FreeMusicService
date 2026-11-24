@@ -49,9 +49,10 @@ def client(db_session):
 
 @pytest.fixture
 def media_dir(tmp_path, monkeypatch):
-    """Подменяет MEDIA_DIR на временную папку на время теста."""
-    monkeypatch.setattr(main, "MEDIA_DIR", tmp_path)
-    return tmp_path
+    directory = tmp_path / "media"
+    directory.mkdir()
+    monkeypatch.setattr(main, "MEDIA_DIR", directory)
+    return directory
 
 
 @pytest.fixture
