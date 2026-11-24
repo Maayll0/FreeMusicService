@@ -13,14 +13,25 @@ services:
   backend:
     build: ./backend
     restart: unless-stopped
-    command: sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port ${PORT}"
+    command: sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"
     volumes:
       - media_data:/app/media
     environment:
+      APP_ENV: ${APP_ENV:-development}
+      MEDIA_DIR: /app/media
       DATABASE_URL: postgresql://${POSTGRES_USER:-musicdb}:${POSTGRES_PASSWORD:-musicdb_pass}@db:5432/${POSTGRES_DB:-musicdb}
       JWT_SECRET: ${JWT_SECRET:-[REPLACED]}
     depends_on:
       - db
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:80"
+    environment:
+      BACKEND_PORT: ${PORT:-8000}
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:
